@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -16,41 +16,69 @@ import { Label } from "@/components/ui/label"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockBooks } from "@/lib/mock-data"
 import type { Book } from "@/lib/types"
 import { Edit, Trash2 } from "lucide-react"
 import axios from "axios"
 import {toast} from "sonner"
 
 export default function LibraryPage() {
-  const [books] = useState(mockBooks)
+  const [books, setBooks] = useState([])
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [deletingBook, setDeletingBook] = useState<Book | null>(null)
   const [addingBook, setAddingBook] = useState<Book | null>(null)
-  const [editForm, setEditForm] = useState({ title: "", id: "" })
+  const [editForm, setEditForm] = useState({ title: "", bookId: "" })
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get('/api/books');
+        if (response.status === 200) {
+          setBooks(response.data);
+        } else {
+          toast.error("Failed to fetch books");
+        }
+      } catch (error) {
+        console.error("Error fetching books:", error);
+        toast.error("Failed to fetch books", { description: error instanceof Error ? error.message : "Unknown error" });
+      }
+    };
+    fetchBooks();
+  }, [addingBook, editingBook, deletingBook]);
+
 
   const handleEdit = (book: Book) => {
     setEditingBook(book)
-    setEditForm({ title: book.title, id: book.id })
+    setEditForm({ title: book.title, bookId: book.bookId })
   }
 
-  const handleEditSubmit = () => {
-    console.log("Editing book:", {
-      ...editForm,
-    })
+  const handleEditSubmit = async () => {
+    try {
+      const response = await axios.put('/api/books', {
+        ...editForm
+      })
+      if (response.status === 200) {
+        toast.success("Book updated successfully")
+      } else {
+        toast.error("Failed to update book")
+      }
+    } catch (error) {
+      console.error("Error updating book:", error)
+      toast.error("Failed to update book", { description: error instanceof Error ? error.message : "Unknown error" })
+    }
+
     setEditingBook(null)
-    setEditForm({ title: "", id: "" })
+    setEditForm({ title: "", bookId: "" })
   }
   const handleAddBook = (book: Book) => {
     setAddingBook(book)
-    setEditForm({ title: book.title, id: book.id })
+    setEditForm({ title: book.title, bookId: book.bookId })
   }
 
   const handleAddSubmit = async () => {
     try{
-      const response = await axios.post('/api/add-book', {
+      const response = await axios.post('/api/books', {
         title: editForm.title,
-        id: editForm.id
+        bookId: editForm.bookId
       })
       if (response.status === 201) {
         toast.success("Book added successfully")
@@ -63,15 +91,28 @@ export default function LibraryPage() {
       toast.error("Failed to add book", { description: error instanceof Error ? error.message : "Unknown error" })
     }
     setAddingBook(null)
-    setEditForm({ title: "", id: "" })
+    setEditForm({ title: "", bookId: "" })
   }
 
   const handleDelete = (book: Book) => {
     setDeletingBook(book)
   }
 
-  const handleDeleteConfirm = () => {
-    console.log("Deleting book:", deletingBook?.id)
+  const handleDeleteConfirm = async () => {
+    console.log("Deleting book:", deletingBook?.bookId)
+    try{
+      const response = await axios.delete('/api/books', {
+        data: { bookId: deletingBook?.bookId }
+      })
+      if (response.status === 200) {
+        toast.success("Book deleted successfully")
+      } else {
+        toast.error("Failed to delete book")
+      }
+    } catch (error) {
+      console.error("Error deleting book:", error)
+      toast.error("Failed to delete book", { description: error instanceof Error ? error.message : "Unknown error" })
+    }
     setDeletingBook(null)
   }
 
@@ -81,7 +122,7 @@ export default function LibraryPage() {
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <h1 className="text-xl font-semibold">Library Management</h1>
-        <Button className="ml-auto" onClick={() => handleAddBook({ id: "", title: "" })}>
+        <Button className="ml-auto" onClick={() => handleAddBook({ bookId: "", title: "" })}>
           Add Book
         </Button>
       </header>
@@ -102,8 +143,8 @@ export default function LibraryPage() {
               </TableHeader>
               <TableBody>
                 {books.map((book) => (
-                  <TableRow key={book.id}>
-                    <TableCell className="font-medium">{book.id}</TableCell>
+                  <TableRow key={book.bookId}>
+                    <TableCell className="font-medium">{book.bookId}</TableCell>
                     <TableCell>{book.title}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -139,28 +180,6 @@ export default function LibraryPage() {
                 id="edit-title"
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-author" className="text-right">
-                Author
-              </Label>
-              <Input
-                id="edit-author"
-                value={editForm.author}
-                onChange={(e) => setEditForm({ ...editForm, author: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-isbn" className="text-right">
-                ISBN
-              </Label>
-              <Input
-                id="edit-isbn"
-                value={editForm.isbn}
-                onChange={(e) => setEditForm({ ...editForm, isbn: e.target.value })}
                 className="col-span-3"
               />
             </div>
@@ -218,8 +237,8 @@ export default function LibraryPage() {
               </Label>
               <Input
                 id="edit-isbn"
-                value={editForm.id}
-                onChange={(e) => setEditForm({ ...editForm, id: e.target.value })}
+                value={editForm.bookId}
+                onChange={(e) => setEditForm({ ...editForm, bookId: e.target.value })}
                 className="col-span-3"
               />
             </div>
