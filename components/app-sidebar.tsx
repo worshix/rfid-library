@@ -47,7 +47,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="">
         <div className="flex items-center gap-2 px-4 py-2">
           <BookOpen className="h-6 w-6" />
           <span className="font-semibold text-lg">RFID Library</span>

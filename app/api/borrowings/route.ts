@@ -43,3 +43,35 @@ export async function POST (request : NextRequest) {
   }
   return NextResponse.json({ message: "Book borrowed successfully" }, { status: 201 });
 };
+
+export async function DELETE(request: NextRequest) {
+  const { id } = await request.json();
+  try {
+    const borrowing = await prisma.borrowing.delete({
+      where: { id },
+    });
+    if (!borrowing) {
+      return NextResponse.json({ error: "Borrowing deletion failed" }, { status: 400 });
+    }
+  } catch (error) {
+    console.error("Error deleting borrowing:", error);
+    return NextResponse.json({ error: "Failed to delete borrowing" }, { status: 500 });
+  }
+  return NextResponse.json({ message: "Borrowing deleted successfully" }, { status: 200 });
+}
+export async function PUT(request: NextRequest) {
+  const { id, status } = await request.json();
+  try {
+    const borrowing = await prisma.borrowing.update({
+      where: { id },
+      data: { status },
+    });
+    if (!borrowing) {
+      return NextResponse.json({ error: "Borrowing update failed" }, { status: 400 });
+    }
+  } catch (error) {
+    console.error("Error updating borrowing:", error);
+    return NextResponse.json({ error: "Failed to update borrowing" }, { status: 500 });
+  }
+  return NextResponse.json({ message: "Borrowing updated successfully" }, { status: 200 });
+}

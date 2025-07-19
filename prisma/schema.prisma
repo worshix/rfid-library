@@ -48,16 +48,9 @@ model Borrowing {
 model TheftAlert {
   id         String   @id @default(cuid())
   timeStolen DateTime @default(now())
-  resolved   Boolean  @default(false)
-  notes      String?
-  
   // Relations
   bookId     String
   book       Book     @relation(fields: [bookId], references: [bookId], onDelete: Cascade)
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
   @@map("theft_alerts")
 }
 
