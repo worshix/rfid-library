@@ -22,7 +22,7 @@ import axios from "axios"
 import {toast} from "sonner"
 
 export default function LibraryPage() {
-  const [books, setBooks] = useState([])
+  const [books, setBooks] = useState<Book[] | null>([])
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [deletingBook, setDeletingBook] = useState<Book | null>(null)
   const [addingBook, setAddingBook] = useState<Book | null>(null)
