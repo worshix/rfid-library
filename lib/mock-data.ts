@@ -1,11 +1,11 @@
 import type { Book, Borrowing, Alert } from "./types"
 
 export const mockBooks: Book[] = [
-  { id: "B001", title: "Introduction to Programming", author: "John Doe", isbn: "978-0123456789" },
-  { id: "B002", title: "Data Structures and Algorithms", author: "Jane Smith", isbn: "978-0987654321" },
-  { id: "B003", title: "Web Development Fundamentals", author: "Bob Johnson", isbn: "978-0456789123" },
-  { id: "B004", title: "Database Design Principles", author: "Alice Brown", isbn: "978-0321654987" },
-  { id: "B005", title: "Machine Learning Basics", author: "Charlie Wilson", isbn: "978-0789123456" },
+  { id: "B001", title: "Introduction to Programming" },
+  { id: "B002", title: "Data Structures and Algorithms" },
+  { id: "B003", title: "Web Development Fundamentals" },
+  { id: "B004", title: "Database Design Principles" },
+  { id: "B005", title: "Machine Learning Basics" },
 ]
 
 export const mockBorrowings: Borrowing[] = [

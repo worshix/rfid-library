@@ -19,25 +19,51 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { mockBooks } from "@/lib/mock-data"
 import type { Book } from "@/lib/types"
 import { Edit, Trash2 } from "lucide-react"
+import axios from "axios"
+import {toast} from "sonner"
 
 export default function LibraryPage() {
   const [books] = useState(mockBooks)
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [deletingBook, setDeletingBook] = useState<Book | null>(null)
-  const [editForm, setEditForm] = useState({ title: "", author: "", isbn: "" })
+  const [addingBook, setAddingBook] = useState<Book | null>(null)
+  const [editForm, setEditForm] = useState({ title: "", id: "" })
 
   const handleEdit = (book: Book) => {
     setEditingBook(book)
-    setEditForm({ title: book.title, author: book.author, isbn: book.isbn })
+    setEditForm({ title: book.title, id: book.id })
   }
 
   const handleEditSubmit = () => {
     console.log("Editing book:", {
-      id: editingBook?.id,
       ...editForm,
     })
     setEditingBook(null)
-    setEditForm({ title: "", author: "", isbn: "" })
+    setEditForm({ title: "", id: "" })
+  }
+  const handleAddBook = (book: Book) => {
+    setAddingBook(book)
+    setEditForm({ title: book.title, id: book.id })
+  }
+
+  const handleAddSubmit = async () => {
+    try{
+      const response = await axios.post('/api/add-book', {
+        title: editForm.title,
+        id: editForm.id
+      })
+      if (response.status === 201) {
+        toast.success("Book added successfully")
+      } else {
+        toast.error("Failed to add book")
+      }
+    }
+    catch(error){
+      console.error("Error adding book:", error)
+      toast.error("Failed to add book", { description: error instanceof Error ? error.message : "Unknown error" })
+    }
+    setAddingBook(null)
+    setEditForm({ title: "", id: "" })
   }
 
   const handleDelete = (book: Book) => {
@@ -55,21 +81,22 @@ export default function LibraryPage() {
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <h1 className="text-xl font-semibold">Library Management</h1>
+        <Button className="ml-auto" onClick={() => handleAddBook({ id: "", title: "" })}>
+          Add Book
+        </Button>
       </header>
       <div className="flex-1 space-y-4 p-4">
         <Card>
           <CardHeader>
             <CardTitle>Book Collection</CardTitle>
-            <CardDescription>Manage your library's book collection</CardDescription>
+            <CardDescription>Manage your library&apos;s book collection</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Book ID</TableHead>
+                  <TableHead>RFID</TableHead>
                   <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>ISBN</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -78,8 +105,6 @@ export default function LibraryPage() {
                   <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.id}</TableCell>
                     <TableCell>{book.title}</TableCell>
-                    <TableCell>{book.author}</TableCell>
-                    <TableCell>{book.isbn}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" onClick={() => handleEdit(book)}>
@@ -154,7 +179,7 @@ export default function LibraryPage() {
           <DialogHeader>
             <DialogTitle>Delete Book</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deletingBook?.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{deletingBook?.title}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -167,6 +192,46 @@ export default function LibraryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Adding Book Dialog Box */}
+      <Dialog open={!!addingBook} onOpenChange={() => setAddingBook(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Book</DialogTitle>
+            <DialogDescription>Fill in the details to add a new book.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="edit-title"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-isbn" className="text-right">
+                RFID
+              </Label>
+              <Input
+                id="edit-isbn"
+                value={editForm.id}
+                onChange={(e) => setEditForm({ ...editForm, id: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleAddSubmit}>
+              Add Book
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </SidebarInset>
   )
 }

@@ -3,6 +3,11 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AppSidebar } from "@/components/app-sidebar"
 import "./globals.css"
+import { Toaster } from "@/components/ui/sonner"
+
+export const metadata = {
+      generator: 'worshix'
+    };
 
 export default function RootLayout({
   children,
@@ -10,19 +15,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider>
             <AppSidebar />
             {children}
           </SidebarProvider>
+          <Toaster position="bottom-right" richColors/>
         </ThemeProvider>
       </body>
     </html>
   )
 }
-
-export const metadata = {
-      generator: 'v0.dev'
-    };
