@@ -30,16 +30,14 @@ model Book {
 model Borrowing {
   id           String          @id @default(cuid())
   studentId    String
-  borrowedAt   DateTime        @default(now())
+  borrowedAt   DateTime        @default(now()) // Automatically set to current date/time
   dueDate      DateTime        // Set to 2 weeks from borrowing date
   returnedAt   DateTime?
-  status       BorrowingStatus @default(ACTIVE)
-  lateFine     Float           @default(0.0)
+  status       BorrowingStatus @default(active)
   
   // Relations
   bookId       String
-  book         Book            @relation(fields: [bookId], references: [bookId], onDelete: Cascade)
-  
+  book         Book            @relation(fields: [bookId], references: [bookId], onDelete: Cascade) 
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
@@ -65,9 +63,9 @@ model TheftAlert {
 
 // Enums
 enum BorrowingStatus {
-  ACTIVE    // Book is currently borrowed
-  RETURNED  // Book has been returned
-  OVERDUE   // Book is past due date
+  active   // Book is currently borrowed
+  returned // Book has been returned
+  overdue  // Book is past due date
 }
 
 
