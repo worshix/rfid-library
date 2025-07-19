@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Book model for library inventory
+model Book {
+  bookId      String   @id // Custom book identifier (e.g., "BK001")
+  title       String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  borrowings  Borrowing[]
+  theftAlerts TheftAlert[]
+
+  @@map("books")
+}
+
+// Borrowing model for tracking borrowed books
+model Borrowing {
+  id           String          @id @default(cuid())
+  studentId    String
+  borrowedAt   DateTime        @default(now())
+  dueDate      DateTime        // Set to 2 weeks from borrowing date
+  returnedAt   DateTime?
+  status       BorrowingStatus @default(ACTIVE)
+  lateFine     Float           @default(0.0)
+  
+  // Relations
+  bookId       String
+  book         Book            @relation(fields: [bookId], references: [bookId], onDelete: Cascade)
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("borrowings")
+}
+
+// Theft Alert model for security incidents
+model TheftAlert {
+  id         String   @id @default(cuid())
+  timeStolen DateTime @default(now())
+  resolved   Boolean  @default(false)
+  notes      String?
+  
+  // Relations
+  bookId     String
+  book       Book     @relation(fields: [bookId], references: [bookId], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("theft_alerts")
+}
+
+// Enums
+enum BorrowingStatus {
+  ACTIVE    // Book is currently borrowed
+  RETURNED  // Book has been returned
+  OVERDUE   // Book is past due date
+}
+
+
