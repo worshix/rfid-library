@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -21,13 +22,52 @@ interface ReturningBookDialogProps {
 }
 
 export function ReturningBookDialog({ open, onOpenChange, bookId, bookTitle, studentId }: ReturningBookDialogProps) {
-  const handleSubmit = () => {
-    console.log("Returning book:", { bookId, bookTitle, studentId })
-    onOpenChange(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch("/api/borrowings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookId,
+          studentId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        console.log("Book returned successfully:", data)
+        onOpenChange(false)
+      } else {
+        setError(data.error || "Failed to return book")
+      }
+    } catch (err) {
+      console.error("Error returning book:", err)
+      setError("Network error. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleClose = (open: boolean) => {
+    if (!isLoading) {
+      if (!open) {
+        setError("")
+      }
+      onOpenChange(open)
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Return Book</DialogTitle>
@@ -52,10 +92,19 @@ export function ReturningBookDialog({ open, onOpenChange, bookId, bookTitle, stu
             </Label>
             <Input id="studentId" value={studentId} className="col-span-3" disabled />
           </div>
+          {error && (
+            <div className="text-sm text-red-600 text-center">
+              {error}
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSubmit}>
-            Return Book
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? "Returning..." : "Return Book"}
           </Button>
         </DialogFooter>
       </DialogContent>

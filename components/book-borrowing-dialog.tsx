@@ -22,15 +22,59 @@ interface BookBorrowingDialogProps {
 
 export function BookBorrowingDialog({ open, onOpenChange, bookId, bookTitle }: BookBorrowingDialogProps) {
   const [studentId, setStudentId] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSubmit = () => {
-    console.log("Borrowing book:", { bookId, bookTitle, studentId })
-    setStudentId("")
-    onOpenChange(false)
+  const handleSubmit = async () => {
+    if (!studentId.trim()) {
+      setError("Student ID is required")
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch("/api/borrowings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookId,
+          studentId: studentId.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        console.log("Book borrowed successfully:", data)
+        setStudentId("")
+        onOpenChange(false)
+      } else {
+        setError(data.error || "Failed to borrow book")
+      }
+    } catch (err) {
+      console.error("Error borrowing book:", err)
+      setError("Network error. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleClose = (open: boolean) => {
+    if (!isLoading) {
+      if (!open) {
+        setStudentId("")
+        setError("")
+      }
+      onOpenChange(open)
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Borrow Book</DialogTitle>
@@ -59,12 +103,22 @@ export function BookBorrowingDialog({ open, onOpenChange, bookId, bookTitle }: B
               onChange={(e) => setStudentId(e.target.value)}
               className="col-span-3"
               placeholder="Enter student ID"
+              disabled={isLoading}
             />
           </div>
+          {error && (
+            <div className="text-sm text-red-600 text-center">
+              {error}
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSubmit}>
-            Borrow Book
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+            disabled={isLoading || !studentId.trim()}
+          >
+            {isLoading ? "Borrowing..." : "Borrow Book"}
           </Button>
         </DialogFooter>
       </DialogContent>

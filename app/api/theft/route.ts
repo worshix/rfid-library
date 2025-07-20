@@ -1,9 +1,9 @@
-import { NextResponse, NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/lib/generated/prisma";
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const borrowings = await prisma.borrowing.findMany({
       include: {

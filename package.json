@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ws": "node scripts/start-websocket.mjs",
+    "dev:full": "concurrently \"npm run ws\" \"npm run dev\"",
+    "db:seed": "node prisma/seed.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -67,6 +70,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
+    "concurrently": "^9.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.2",
     "tailwindcss": "^4",
