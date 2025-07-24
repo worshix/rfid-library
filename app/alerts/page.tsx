@@ -1,22 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { mockAlerts } from "@/lib/mock-data"
 import { AlertTriangle } from "lucide-react"
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState(mockAlerts)
+  const [alerts, setAlerts] = useState([])
 
-  const handleClearAlerts = () => {
-    console.log("Clearing all alerts")
-    setAlerts([])
+  useEffect(()=> {
+    // can fetch alerts from http://localhost:3000/api/theft
+    const fetchAlerts = async () => {
+      const response = await fetch("http://localhost:3000/api/theft")
+      const data = await response.json()
+      setAlerts(data)
+    }
+    fetchAlerts()
+  },[])
+
+const handleClearAlerts = async () => {
+  const response = await fetch("http://localhost:3000/api/theft", {
+    method: "DELETE",
+  })
+  if (response.ok) {
+    setAlerts([]) // Clear the alerts state after successful deletion
   }
+}
 
   return (
     <SidebarInset className="flex flex-col">
@@ -36,7 +49,7 @@ export default function AlertsPage() {
                 </CardTitle>
                 <CardDescription>Monitor security incidents and book theft alerts</CardDescription>
               </div>
-              <Button variant="outline" onClick={handleClearAlerts} disabled={alerts.length === 0}>
+              <Button variant="outline" onClick={() => handleClearAlerts()} disabled={alerts.length === 0}>
                 Clear All Alerts
               </Button>
             </div>
@@ -61,7 +74,7 @@ export default function AlertsPage() {
                   {alerts.map((alert) => (
                     <TableRow key={alert.id}>
                       <TableCell className="font-medium">{alert.bookId}</TableCell>
-                      <TableCell>{alert.bookTitle}</TableCell>
+                      <TableCell>{alert.book.title}</TableCell>
                       <TableCell>{alert.timeStolen.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="destructive">Active Alert</Badge>

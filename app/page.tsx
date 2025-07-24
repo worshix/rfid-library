@@ -4,15 +4,85 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { ConnectionStatus } from "@/components/connection-status"
-import { mockBooks, mockBorrowings, mockAlerts } from "@/lib/mock-data"
+import { mockBorrowings, mockAlerts } from "@/lib/mock-data"
 import { BookOpen, Users, AlertTriangle, Clock } from "lucide-react"
+import axios from "axios"
+import {useState, useEffect} from 'react'
 
 export default function HomePage() {
-  const totalBooks = mockBooks.length
-  const totalBorrowings = mockBorrowings.length
-  const lateBorrowings = mockBorrowings.filter((b) => b.status === "late").length
-  const totalAlerts = mockAlerts.length
-  const totalLateFines = mockBorrowings.reduce((sum, b) => sum + b.lateFine, 0)
+    // Function to calculate late fine
+  const calculateLateFine = (dueDate: string, status: string) => {
+    if (status === "returned") return 0;
+    
+    const currentDate = new Date();
+    const due = new Date(dueDate);
+    const diffTime = currentDate.getTime() - due.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 0 ? diffDays * 1 : 0; // $1 per day late
+  };
+
+  // Function to format date to human readable
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Function to determine status based on due date
+  const getStatus = (dueDate: string, returnedAt: string | null) => {
+    if (returnedAt) return "returned";
+    
+    const currentDate = new Date();
+    const due = new Date(dueDate);
+    
+    return currentDate > due ? "late" : "active";
+  };
+  const [books, setBooks] = useState([])
+  const [borrowings, setBorrowings] = useState([])
+  const [alerts, setAlerts] = useState([])
+  useEffect(() => {
+   const fetchBooks = async () => {
+      try {
+        const response = await axios.get('/api/books')
+        setBooks(response.data)
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching books:', error)
+      }
+    }
+   fetchBooks()
+
+   const fetchBorrowings = async () => {
+     try {
+       const response = await axios.get('/api/borrowings')
+       setBorrowings(response.data)
+       console.log(response.data)
+     } catch (error) {
+       console.error('Error fetching borrowings:', error)
+     }
+   }
+    fetchBorrowings()
+    const fetchAlerts = async () => {
+      try {
+        const response = await axios.get('/api/theft')
+        setAlerts(response.data)
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching alerts:', error)
+      }
+    }
+    fetchAlerts()
+  },[])
+  const totalBooks = books.length
+  const totalBorrowings = borrowings.length
+  const lateBorrowings = borrowings.filter((b) => b.status === "overdue").length
+  const totalAlerts = alerts.length
+  // Total Fees will be calculated from date
+  const totalLateFines = borrowings.reduce((sum, b) => sum + calculateLateFine(b.dueDate, b.status), 0)
 
   return (
     <SidebarInset className="flex flex-col">
