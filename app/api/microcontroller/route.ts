@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Book is properly borrowed - no action needed
         return NextResponse.json({
-          message: "theft",
+          message: `Book ${rfidTag} is properly borrowed by ${activeBorrowing.studentId}`,
           action: 'none'
         });
       }
