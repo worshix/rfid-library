@@ -87,6 +87,13 @@ export async function POST(request: NextRequest) {
             timestamp: new Date().toISOString()
           }
         };
+
+        // Send response with message of theft back to controller
+        return NextResponse.json({
+          message: `Theft alert! Book ${rfidTag} detected at door`,
+          action: 'theft',
+          book: book.title
+        });
       } else {
         // Book is properly borrowed - no action needed
         return NextResponse.json({
