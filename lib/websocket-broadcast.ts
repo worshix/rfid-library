@@ -23,8 +23,14 @@ export async function broadcastToClients(event: RFIDEvent) {
       await new Promise((resolve, reject) => {
         if (!wsClient) return reject(new Error('WebSocket client not initialized'));
         
-        wsClient.onopen = () => resolve(void 0);
-        wsClient.onerror = (error) => reject(error);
+        wsClient.onopen = () => {
+          console.log('WebSocket broadcast client connected');
+          resolve(void 0);
+        };
+        wsClient.onerror = (error) => {
+          console.error('WebSocket broadcast client error:', error);
+          reject(error);
+        };
         
         setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
       });
@@ -34,8 +40,9 @@ export async function broadcastToClients(event: RFIDEvent) {
     const message = JSON.stringify({ type: 'broadcast', event });
     wsClient.send(message);
     
-    console.log('Sent broadcast request:', event.type);
+    console.log('Sent broadcast request:', event.type, 'for book:', event.data.bookTitle);
   } catch (error) {
     console.error('Failed to broadcast to WebSocket server:', error);
+    // Don't fail the API request if WebSocket broadcast fails
   }
 }
