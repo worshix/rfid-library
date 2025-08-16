@@ -88,6 +88,9 @@ export async function POST(request: NextRequest) {
           }
         };
 
+        // Broadcast the theft event to all connected WebSocket clients
+        broadcastToClients(event);
+
         // Send response with message of theft back to controller
         return NextResponse.json({
           message: `Theft alert! Book ${rfidTag} detected at door`,
